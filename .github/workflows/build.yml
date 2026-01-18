@@ -1,0 +1,39 @@
+name: Build Mac App
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest  # 重点：这里使用的是 GitHub 的 Mac 服务器
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+
+    - name: Install dependencies
+      run: |
+        pip install customtkinter pyinstaller
+
+    - name: Build with PyInstaller
+      run: |
+        # 使用 PyInstaller 打包
+        pyinstaller --noconfirm --onefile --windowed --clean --name "DNA_Pro_Modern" --collect-all customtkinter dna_modern_tool.py
+
+    - name: Zip the App
+      run: |
+        # Mac 的 .app 其实是个文件夹，需要压缩成 zip 才能下载
+        cd dist
+        zip -r DNA_Pro_Modern.zip DNA_Pro_Modern.app
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Mac-App-Download
+        path: dist/DNA_Pro_Modern.zip
